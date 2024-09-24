@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:todo_app_demo/home_page.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:todo_app_demo/task_model.dart';
 import 'login_page.dart';
 import 'home_page.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Hive and open the boxes
+  await Hive.initFlutter();
+  Hive.registerAdapter(TaskModelAdapter());
+
+  // Open the necessary boxes
+  await Hive.openBox<TaskModel>('tasksBox'); // Open the tasks box
+  await Hive.openBox('userBox'); // Open the user box
+
   runApp(MyApp());
 }
 
@@ -24,9 +35,10 @@ class MyApp extends StatelessWidget {
 class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    Future.delayed(Duration(seconds: 2), () async {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    // Use a Future to delay navigation for 5 seconds
+    Future.delayed(Duration(seconds: 5), () async {
+      var box = Hive.box('userBox'); // Access the user box here
+      bool isLoggedIn = box.get('isLoggedIn', defaultValue: false);
 
       if (isLoggedIn) {
         Navigator.pushReplacement(

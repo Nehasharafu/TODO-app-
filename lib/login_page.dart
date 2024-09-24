@@ -10,11 +10,31 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false; // Track loading state
 
   Future<void> _login() async {
+    if (_nameController.text.isEmpty || _passwordController.text.isEmpty) {
+      // Show error message if fields are empty
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter both name and password')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true; // Start loading
+    });
+
+    // Simulate a login delay (remove in production)
+    await Future.delayed(Duration(seconds: 2));
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setBool('isLoggedIn', true);
     prefs.setString('username', _nameController.text);
+
+    setState(() {
+      _isLoading = false; // Stop loading
+    });
 
     Navigator.pushReplacement(
       context,
@@ -73,17 +93,21 @@ class _LoginPageState extends State<LoginPage> {
             ),
             SizedBox(height: 30),
             ElevatedButton(
-              onPressed: _login,
+              onPressed: _isLoading ? null : _login, // Disable button if loading
               style: ElevatedButton.styleFrom(
-    foregroundColor: Colors.white, backgroundColor: Color.fromARGB(255, 26, 14, 166),  // Change the text color to blue
-    padding: EdgeInsets.symmetric(vertical: 15),
-  ),
-  child: Text('Login'),
-),
-            ]),
+                foregroundColor: Colors.white,
+                backgroundColor: Color.fromARGB(255, 26, 14, 166),
+                padding: EdgeInsets.symmetric(vertical: 15),
+              ),
+              child: _isLoading
+                  ? CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    )
+                  : Text('Login'),
+            ),
+          ],
+        ),
       ),
-        
-      
     );
   }
 }
